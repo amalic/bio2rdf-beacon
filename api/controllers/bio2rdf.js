@@ -148,7 +148,7 @@ function getStatements(req, res) {
     var pageSize = parseInt(req.swagger.params.pageSize.value);
     var keywords = req.swagger.params.keywords.value;
     var semgroups = req.swagger.params.semgroups.value;
-    if(isNaN(pageNumber) || pageNumber,1)
+    if(isNaN(pageNumber) || pageNumber<1)
         pageNumber = 1;
     if(isNaN(pageSize) || pageSize<1)
         pageSize = 10;
