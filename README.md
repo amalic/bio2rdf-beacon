@@ -1,9 +1,9 @@
-## Start Swagger web editor
+### Start Swagger web editor
 ```
 swagger project edit
 ```
 
-## Start project
+### Start project
 ```
 swagger project start
 ```
