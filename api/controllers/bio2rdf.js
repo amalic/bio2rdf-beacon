@@ -3,9 +3,11 @@
 var util = require('util');
 var unirest = require('unirest');
 var deasync = require('deasync');
-const {Client} = require('virtuoso-sparql-client');
+const SparqlClient = require('sparql-client-2');
+const SPARQL = SparqlClient.SPARQL;
 
-var bio2rdfEndpoint = "http://bio2rdf.org/sparql";
+
+var sparqlEndpoint = "http://graphdb.dumontierlab.com/repositories/bio2rdf";
 
 // mapping swagger-operationId to javascript-function
 module.exports = {
@@ -20,16 +22,19 @@ module.exports = {
 
 function executeSparql(sparql) {
     var done = false;
-    var ret;
+    var ret = null;
 
-    let DbPediaClient = new Client(bio2rdfEndpoint);
-    DbPediaClient.setOptions("application/json");
-    DbPediaClient.query(sparql)
-    .then((results)=>{
-        ret = results;
-        done = true;
-    })
-    .catch(console.log);
+    let client = new SparqlClient(sparqlEndpoint);
+    client.query(sparql)
+        .execute()
+        .then(function (results) {
+            ret = results;
+            done = true;
+        })
+        .catch(function(error) {
+            console.log(error);
+            done = true;
+        });
 
     while(!done){deasync.sleep(10)}
 
