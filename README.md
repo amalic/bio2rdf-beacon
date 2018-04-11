@@ -1,9 +1,10 @@
-### Start Swagger web editor
+# bio2rdf-beacon
+## build
 ```
-swagger project edit
+docker build --rm -f Dockerfile -t bio2rdf-beacon:latest .
 ```
 
-### Start project
+## run
 ```
-swagger project start
+docker run --rm -it -p 80:80 bio2rdf-beacon:latest
 ```
