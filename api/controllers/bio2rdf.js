@@ -38,15 +38,15 @@ function linkedTypes(req, res) {
                 ?Bio2RdfType skos:mappingRelation ?SioType .
                 graph <http://semanticscience.org/resource/> {
                     ?SioType a owl:Class .
-                } .
+                }
                 filter not exists {
                     graph <http://semanticscience.org/resource/> {
                         ?Bio2RdfType a owl:Class .
                     }
-                } .
+                }
             }
             group by ?SioType
-        } .
+        }
         ?SioType dc:identifier ?Id;
                 rdfs:label ?Type .
     }
