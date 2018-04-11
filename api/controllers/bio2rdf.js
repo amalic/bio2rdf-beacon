@@ -1,13 +1,19 @@
 'use strict';
 
-var util = require('util');
-var unirest = require('unirest');
-var deasync = require('deasync');
+const sparqlEndpoint = "http://graphdb.dumontierlab.com/repositories/bio2rdf";
+
+const util = require('util');
+const unirest = require('unirest');
+const deasync = require('deasync');
+// README: https://www.npmjs.com/package/sparql-client-2#registering-common-prefixes
 const SparqlClient = require('sparql-client-2');
 const SPARQL = SparqlClient.SPARQL;
 
-
-var sparqlEndpoint = "http://graphdb.dumontierlab.com/repositories/bio2rdf";
+const sparqlClient = new SparqlClient(sparqlEndpoint)
+    .registerCommon('rdfs')
+    .register({owl: 'http://www.w3.org/2002/07/owl#'})
+    .register({skos: 'http://www.w3.org/2004/02/skos/core#'})
+    .register({dc: 'http://purl.org/dc/elements/1.1/'});
 
 // mapping swagger-operationId to javascript-function
 module.exports = {
@@ -20,37 +26,39 @@ module.exports = {
     , getEvidence                   : getEvidence
 };
 
-function executeSparql(sparql) {
-    var done = false;
-    var ret = null;
-
-    let client = new SparqlClient(sparqlEndpoint);
-    client.query(sparql)
-        .execute()
-        .then(function (results) {
-            ret = results;
-            done = true;
-        })
-        .catch(function(error) {
-            console.log(error);
-            done = true;
-        });
-
-    while(!done){deasync.sleep(10)}
-
-    return ret;
-}
-
 // /types
 function linkedTypes(req, res) {
     //console.log("linkedTypes");
 
+    var result = executeSparql(SPARQL`
+    select ?Type ?Id ?Count where {
+        {
+            select ?SioType (count(?Bio2RdfType) as ?Count) where {
+                [] a ?Bio2RdfType .
+                ?Bio2RdfType skos:mappingRelation ?SioType .
+                graph <http://semanticscience.org/resource/> {
+                    ?SioType a owl:Class .
+                } .
+                filter not exists {
+                    graph <http://semanticscience.org/resource/> {
+                        ?Bio2RdfType a owl:Class .
+                    }
+                } .
+            }
+            group by ?SioType
+        } .
+        ?SioType dc:identifier ?Id;
+                rdfs:label ?Type .
+    }
+    order by desc(?Count)
+    `);
+
     var types = [];
-    var result = executeSparql('select ?Type (count(?t) as ?Count) where {?t a ?Type .} group by ?Type');
     result.results.bindings.forEach(function(binding){
         var type = binding.Type.value;
+        var id = binding.Id.value;
         var count = parseInt(binding.Count.value);
-        types.push({id: type , idmap : "TODO", frequency: count})
+        types.push({id: type , idmap : id, frequency: count})
     });
     
     res.json(types);
@@ -220,4 +228,24 @@ function getEvidence(req, res) {
     ]
 
     res.json(ret);
+}
+
+function executeSparql(sparql) {
+    var done = false;
+    var ret = null;
+
+    sparqlClient.query(sparql)
+        .execute()
+        .then(function (results) {
+            ret = results;
+            done = true;
+        })
+        .catch(function(error) {
+            console.log(error);
+            done = true;
+        });
+
+    while(!done){deasync.sleep(10)}
+
+    return ret;
 }
