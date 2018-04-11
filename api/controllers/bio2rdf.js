@@ -31,7 +31,7 @@ function linkedTypes(req, res) {
     //console.log("linkedTypes");
 
     var result = executeSparql(SPARQL`
-    select ?Type ?Id ?Count where {
+    select ?SioType ?Type ?Id ?Count where {
         {
             select ?SioType (count(?Bio2RdfType) as ?Count) where {
                 [] a ?Bio2RdfType .
