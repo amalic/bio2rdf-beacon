@@ -13,7 +13,8 @@ const sparqlClient = new SparqlClient(sparqlEndpoint)
     .registerCommon('rdfs')
     .register({owl: 'http://www.w3.org/2002/07/owl#'})
     .register({skos: 'http://www.w3.org/2004/02/skos/core#'})
-    .register({dc: 'http://purl.org/dc/elements/1.1/'});
+    .register({dc: 'http://purl.org/dc/elements/1.1/'})
+    .register({luc: 'http://www.ontotext.com/owlim/lucene#' });
 
 // mapping swagger-operationId to javascript-function
 module.exports = {
@@ -35,7 +36,8 @@ function linkedTypes(req, res) {
         {
             select ?SioType (count(?Bio2RdfType) as ?Count) where {
                 [] a ?Bio2RdfType .
-                ?Bio2RdfType skos:mappingRelation ?SioType .
+                {?Bio2RdfType skos:mappingRelation ?SioType}
+                union {?Bio2RdfType owl:sameAs ?SioType}
                 graph <http://semanticscience.org/resource/> {
                     ?SioType a owl:Class .
                 }
@@ -170,6 +172,26 @@ function getStatements(req, res) {
     //console.log("  pageSize:" + pageSize);
     //console.log("  keywords:" + keywords);
     //console.log("  semgroups:" + semgroups);
+
+    /*
+    select (count(*) as ?count) where {
+    #select ?sioType ?sioLabel ?rel ?type ?s ?p ?o (datatype(?o) as ?dataType) where { 
+        #?sioType rdfs:subClassOf sio:SIO_000000 .
+        graph <http://semanticscience.org/resource/> {
+            { ?sioType rdfs:label "gene"@en }
+            union {?sioType rdfs:label "study design"@en } .  
+        }
+        
+        ?o luc:bio2rdfIdx '"parkinson" AND "alzheimer"' .
+        
+        ?s ?p ?o ;
+            a ?type .
+        {?type skos:mappingRelation ?sioType }
+        union {?type owl:sameAs ?sioType }
+        ?type ?rel ?sioType .
+        ?sioType rdfs:label ?sioLabel .    
+    }
+    */
 
     var sparql = 'select ?s ?sl ?p ?pl ?o ?ol where {?s ?p ?o . ?s rdfs:label ?sl . ?p rdfs:label ?pl . ?o rdfs:label ?ol . '
         + 'filter(!regex(str(?p), "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")).';
